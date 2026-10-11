@@ -1,0 +1,437 @@
+<title>COD Pricing Ledger</title>
+<style>
+/* layout: left column of input groups (order funnel, pricing, costs, ad spend) feeding a right-hand KPI strip + line-item ledger table; stacks to one column on phone */
+:root{
+  --bg:#f3f1ea;
+  --surface:#ffffff;
+  --surface-2:#eae6d9;
+  --fg:#1d1b16;
+  --fg-muted:#6b6557;
+  --border:#d8d2c0;
+  --accent:#1f6f5c;
+  --accent-soft:#dcebe5;
+  --positive:#1f6f5c;
+  --negative:#b3432b;
+  --warning:#9c6b14;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15140f;
+    --surface:#1f1d16;
+    --surface-2:#282519;
+    --fg:#f1ede1;
+    --fg-muted:#9e9786;
+    --border:#39352585;
+    --accent:#5fcdab;
+    --accent-soft:#1f352c;
+    --positive:#5fcdab;
+    --negative:#e38066;
+    --warning:#dcab57;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15140f;
+  --surface:#1f1d16;
+  --surface-2:#282519;
+  --fg:#f1ede1;
+  --fg-muted:#9e9786;
+  --border:#39352585;
+  --accent:#5fcdab;
+  --accent-soft:#1f352c;
+  --positive:#5fcdab;
+  --negative:#e38066;
+  --warning:#dcab57;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  padding-inline:16px;
+  padding-block:28px 48px;
+  min-height:100%;
+}
+h1,h2,h3{font-family:"Fraunces","Georgia",serif;font-weight:600;text-wrap:balance;margin:0;}
+.num{font-family:"IBM Plex Mono","SFMono-Regular",monospace;font-variant-numeric:tabular-nums;}
+
+.wrap{max-width:1180px;margin-inline:auto;}
+
+header.page{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:8px 24px;
+  margin-bottom:28px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--border);
+}
+header.page h1{font-size:clamp(1.5rem,4vw,2.1rem);letter-spacing:-0.01em;}
+header.page .sub{color:var(--fg-muted);font-size:0.9rem;max-width:46ch;}
+header.page .mark{color:var(--accent);}
+
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,320px) minmax(0,1fr);
+  gap:24px;
+  align-items:start;
+}
+@media (max-width:760px){
+  .layout{grid-template-columns:minmax(0,1fr);}
+}
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+}
+
+.inputs{display:flex;flex-direction:column;gap:16px;min-width:0;}
+.group{display:flex;flex-direction:column;gap:10px;}
+.group h3{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--fg-muted);font-family:"IBM Plex Sans",sans-serif;font-weight:600;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:0.82rem;color:var(--fg-muted);}
+.field .hint{font-size:0.72rem;color:var(--fg-muted);opacity:0.8;}
+.field-row{display:flex;align-items:center;gap:8px;}
+.prefix{color:var(--fg-muted);font-size:0.85rem;flex-shrink:0;}
+input[type="number"]{
+  width:100%;
+  min-width:0;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:9px 10px;
+  color:var(--fg);
+  font-family:"IBM Plex Mono",monospace;
+  font-size:0.92rem;
+  font-variant-numeric:tabular-nums;
+}
+input[type="number"]:focus{outline:2px solid var(--accent);outline-offset:1px;}
+input[type="number"]::-webkit-inner-spin-button{opacity:0.5;}
+
+.results{display:flex;flex-direction:column;gap:20px;min-width:0;}
+
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;
+}
+.kpi{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+}
+.kpi .label{font-size:0.74rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--fg-muted);}
+.kpi .value{font-size:clamp(1.25rem,3vw,1.6rem);font-weight:600;line-height:1.1;}
+.kpi .note{font-size:0.76rem;color:var(--fg-muted);}
+.kpi.hero{background:var(--accent-soft);border-color:transparent;}
+.pos{color:var(--positive);}
+.neg{color:var(--negative);}
+.warn{color:var(--warning);}
+
+.ledger{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:18px;
+  overflow-x:auto;
+}
+.ledger h2{font-size:1.05rem;margin-bottom:4px;}
+.ledger .sub{color:var(--fg-muted);font-size:0.82rem;margin-bottom:14px;}
+table{width:100%;border-collapse:collapse;min-width:420px;}
+table caption{text-align:left;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--fg-muted);padding-block:10px 6px;}
+tr{border-bottom:1px solid var(--border);}
+tr:last-child{border-bottom:none;}
+td{padding:7px 4px;font-size:0.88rem;vertical-align:baseline;}
+td.lbl{color:var(--fg-muted);}
+td.val{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap;}
+tr.subtotal td{font-weight:600;color:var(--fg);border-top:1px solid var(--border);}
+tr.subtotal{border-bottom:1px solid var(--border);}
+
+.foot{margin-top:26px;color:var(--fg-muted);font-size:0.78rem;text-align:center;}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<div class="wrap">
+  <header class="page">
+    <div>
+      <h1>COD Pricing <span class="mark">Ledger</span></h1>
+      <p class="sub">Cash, margin and GST on every order batch &mdash; COD and prepaid, delivered and RTO&rsquo;d, settled against your Meta spend.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- INPUTS -->
+    <section class="panel inputs">
+      <div class="group">
+        <h3>Order funnel</h3>
+        <div class="field">
+          <label for="totalOrders">Total orders</label>
+          <input type="number" id="totalOrders" value="100" min="0" step="1">
+        </div>
+        <div class="field">
+          <label for="confirmedOrders">Confirmed orders</label>
+          <input type="number" id="confirmedOrders" value="90" min="0" step="1">
+          <span class="hint">Tracking only &mdash; not used below, same as the sheet.</span>
+        </div>
+        <div class="field">
+          <label for="deliveredOrders">Delivered orders</label>
+          <input type="number" id="deliveredOrders" value="75" min="0" step="1">
+        </div>
+        <div class="field">
+          <label for="prepaidOrders">Prepaid orders</label>
+          <input type="number" id="prepaidOrders" value="20" min="0" step="1">
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Selling price</h3>
+        <div class="field">
+          <label for="codPrice">COD selling price</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="codPrice" value="699" min="0" step="1"></div>
+        </div>
+        <div class="field">
+          <label for="prepaidPrice">Prepaid selling price</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="prepaidPrice" value="599" min="0" step="1"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Payment gateway (per prepaid order)</h3>
+        <div class="field">
+          <label for="rzpFeeEx">Razorpay fee (ex GST)</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="rzpFeeEx" value="15.98" min="0" step="0.01"></div>
+        </div>
+        <div class="field">
+          <label for="rzpGST">GST on Razorpay fee (ITC)</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="rzpGST" value="2.88" min="0" step="0.01"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Costs</h3>
+        <div class="field">
+          <label for="supplierCost">Supplier cost (incl GST)</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="supplierCost" value="300" min="0" step="1"></div>
+        </div>
+        <div class="field">
+          <label for="rtoCost">RTO cost (per returned order)</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="rtoCost" value="120" min="0" step="1"></div>
+        </div>
+        <div class="field">
+          <label for="otherExpenses">Other expenses</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="otherExpenses" value="0" min="0" step="1"></div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Meta ad spend</h3>
+        <div class="field">
+          <label for="metaCPP">Meta CPP, ex GST (reference)</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="metaCPP" value="120" min="0" step="1"></div>
+          <span class="hint">What Meta is currently costing you per order &mdash; checked against break-even below.</span>
+        </div>
+        <div class="field">
+          <label for="metaSpendIncl">Meta spend, incl GST</label>
+          <div class="field-row"><span class="prefix">&#8377;</span><input type="number" id="metaSpendIncl" value="12000" min="0" step="1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="results">
+      <div class="kpis">
+        <div class="kpi hero">
+          <span class="label">Net cash</span>
+          <span class="value num" id="kpiNetCash">&#8377;0</span>
+          <span class="note">Cash received minus cash paid out</span>
+        </div>
+        <div class="kpi hero">
+          <span class="label">Profit after GST</span>
+          <span class="value num" id="kpiProfitAfterGST">&#8377;0</span>
+          <span class="note" id="kpiGSTNote">&nbsp;</span>
+        </div>
+        <div class="kpi">
+          <span class="label">Profit / delivered order</span>
+          <span class="value num" id="kpiProfitPerDelivered">&#8377;0</span>
+        </div>
+        <div class="kpi">
+          <span class="label">Delivery rate</span>
+          <span class="value num" id="kpiDeliveryRate">0.0%</span>
+        </div>
+        <div class="kpi">
+          <span class="label">Cash margin</span>
+          <span class="value num" id="kpiCashMargin">0.0%</span>
+          <span class="note">Cash received per COD-delivered order</span>
+        </div>
+        <div class="kpi">
+          <span class="label">Break-even CPP</span>
+          <span class="value num" id="kpiBreakeven">&#8377;0</span>
+          <span class="note" id="kpiBreakevenNote">&nbsp;</span>
+        </div>
+      </div>
+
+      <div class="ledger">
+        <h2>Cash flow</h2>
+        <p class="sub">How the order funnel turns into money in and money out.</p>
+        <table>
+          <tbody>
+            <tr><td class="lbl">Total gateway deduction (per prepaid order)</td><td class="val num" id="rGatewayDeduction">&#8377;0</td></tr>
+            <tr><td class="lbl">Net prepaid settlement (per prepaid order)</td><td class="val num" id="rNetPrepaidSettlement">&#8377;0</td></tr>
+            <tr><td class="lbl">COD orders</td><td class="val num" id="rCodOrders">0</td></tr>
+            <tr><td class="lbl">COD delivered</td><td class="val num" id="rCodDelivered">0</td></tr>
+            <tr><td class="lbl">COD RTO</td><td class="val num" id="rCodRTO">0</td></tr>
+            <tr><td class="lbl">RTO charges (deducted from COD margin)</td><td class="val num" id="rRtoCharges">&#8377;0</td></tr>
+            <tr><td class="lbl">COD margin received</td><td class="val num" id="rCodMargin">&#8377;0</td></tr>
+            <tr><td class="lbl">Prepaid revenue</td><td class="val num" id="rPrepaidRevenue">&#8377;0</td></tr>
+            <tr class="subtotal"><td>Total cash received</td><td class="val num" id="rTotalCashReceived">&#8377;0</td></tr>
+            <tr><td class="lbl">Supplier payment (prepaid orders)</td><td class="val num" id="rSupplierPayment">&#8377;0</td></tr>
+            <tr><td class="lbl">Meta spend (incl GST)</td><td class="val num" id="rMetaSpendOut">&#8377;0</td></tr>
+            <tr><td class="lbl">Other expenses</td><td class="val num" id="rOtherExpensesOut">&#8377;0</td></tr>
+            <tr class="subtotal"><td>Total cash outflow</td><td class="val num" id="rTotalCashOutflow">&#8377;0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="ledger">
+        <h2>GST</h2>
+        <p class="sub">Output tax on what you sold against input credit you can claim.</p>
+        <table>
+          <tbody>
+            <tr><td class="lbl">Output GST (on sales)</td><td class="val num" id="rOutputGST">&#8377;0</td></tr>
+            <tr><td class="lbl">Input GST / ITC (on spend)</td><td class="val num" id="rInputGST">&#8377;0</td></tr>
+            <tr class="subtotal"><td id="rNetGSTLabel">Net GST payable</td><td class="val num" id="rNetGST">&#8377;0</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <p class="foot">Mirrors the formulas in your Pricing Calculator sheet &mdash; edit any field to recalculate instantly. Figures above are starting examples.</p>
+</div>
+
+<script>
+(function(){
+  var ids = ["totalOrders","confirmedOrders","deliveredOrders","prepaidOrders","codPrice","prepaidPrice",
+    "rzpFeeEx","rzpGST","supplierCost","rtoCost","otherExpenses","metaCPP","metaSpendIncl"];
+  var el = {};
+  ids.forEach(function(id){ el[id] = document.getElementById(id); });
+
+  var inr = new Intl.NumberFormat("en-IN", {style:"currency", currency:"INR", maximumFractionDigits:0});
+  var inr2 = new Intl.NumberFormat("en-IN", {style:"currency", currency:"INR", maximumFractionDigits:2});
+  var pct = new Intl.NumberFormat("en-IN", {style:"percent", minimumFractionDigits:1, maximumFractionDigits:1});
+  var int0 = new Intl.NumberFormat("en-IN");
+
+  function num(id){
+    var v = parseFloat(el[id].value);
+    return isFinite(v) ? v : 0;
+  }
+
+  function setText(id, text){ document.getElementById(id).textContent = text; }
+  function setClass(id, cls){
+    var node = document.getElementById(id);
+    node.classList.remove("pos","neg","warn");
+    if(cls) node.classList.add(cls);
+  }
+
+  function recalc(){
+    var totalOrders = num("totalOrders");
+    var deliveredOrders = num("deliveredOrders");
+    var prepaidOrders = num("prepaidOrders");
+    var codPrice = num("codPrice");
+    var prepaidPrice = num("prepaidPrice");
+    var rzpFeeEx = num("rzpFeeEx");
+    var rzpGST = num("rzpGST");
+    var supplierCost = num("supplierCost");
+    var rtoCost = num("rtoCost");
+    var otherExpenses = num("otherExpenses");
+    var metaCPP = num("metaCPP");
+    var metaSpendIncl = num("metaSpendIncl");
+
+    var gatewayDeduction = rzpFeeEx + rzpGST;
+    var netPrepaidSettlement = prepaidPrice - gatewayDeduction;
+    var metaSpendEx = metaSpendIncl / 1.18;
+
+    var codOrders = totalOrders - prepaidOrders;
+    var codDelivered = deliveredOrders - prepaidOrders;
+    var codRTO = codOrders - codDelivered;
+    var rtoCharges = codRTO * rtoCost;
+    var codMarginReceived = codDelivered * (codPrice - supplierCost) - rtoCharges;
+    var prepaidRevenue = prepaidOrders * netPrepaidSettlement;
+    var totalCashReceived = codMarginReceived + prepaidRevenue;
+    var supplierPayment = prepaidOrders * supplierCost;
+    var totalCashOutflow = otherExpenses + metaSpendIncl + supplierPayment;
+    var netCash = totalCashReceived - totalCashOutflow;
+
+    var profitPerDelivered = deliveredOrders === 0 ? 0 : netCash / deliveredOrders;
+    var breakEvenCPPEx = totalOrders === 0 ? 0 : Math.max(0, ((totalCashReceived - supplierPayment - otherExpenses) / 1.18) / totalOrders);
+    var breakEvenCPPIncl = breakEvenCPPEx * 1.18;
+    var deliveryRate = totalOrders === 0 ? 0 : deliveredOrders / totalOrders;
+    var cashMarginPct = codDelivered === 0 ? 0 : totalCashReceived / codDelivered;
+
+    var outputGST = (codDelivered * codPrice + prepaidOrders * prepaidPrice) * 18 / 118;
+    var inputGST = (metaSpendEx * 0.18) + (rzpGST * prepaidOrders) + ((deliveredOrders * supplierCost) * 18 / 118) + (otherExpenses * 18 / 118);
+    var netGST = outputGST - inputGST;
+    var profitAfterGST = netGST > 0 ? netCash - netGST : netCash;
+
+    // KPIs
+    setText("kpiNetCash", inr.format(netCash));
+    setClass("kpiNetCash", netCash >= 0 ? "pos" : "neg");
+
+    setText("kpiProfitAfterGST", inr.format(profitAfterGST));
+    setClass("kpiProfitAfterGST", profitAfterGST >= 0 ? "pos" : "neg");
+
+    setText("kpiProfitPerDelivered", inr2.format(profitPerDelivered));
+    setClass("kpiProfitPerDelivered", profitPerDelivered >= 0 ? "pos" : "neg");
+
+    setText("kpiDeliveryRate", pct.format(deliveryRate));
+    setText("kpiCashMargin", pct.format(cashMarginPct));
+
+    setText("kpiBreakeven", inr2.format(breakEvenCPPEx) + " ex / " + inr2.format(breakEvenCPPIncl) + " incl");
+    var cppGap = breakEvenCPPEx - metaCPP;
+    setText("kpiBreakevenNote", "Meta CPP " + inr2.format(metaCPP) + " — " + (cppGap >= 0 ? "headroom of " + inr2.format(cppGap) : "over by " + inr2.format(-cppGap)));
+    setClass("kpiBreakevenNote", cppGap >= 0 ? "pos" : "neg");
+
+    setText("kpiGSTNote", netGST > 0 ? "after " + inr2.format(netGST) + " GST payable" : "plus " + inr2.format(-netGST) + " ITC carried");
+
+    // Cash flow ledger
+    setText("rGatewayDeduction", inr2.format(gatewayDeduction));
+    setText("rNetPrepaidSettlement", inr2.format(netPrepaidSettlement));
+    setText("rCodOrders", int0.format(codOrders));
+    setText("rCodDelivered", int0.format(codDelivered));
+    setText("rCodRTO", int0.format(codRTO));
+    setText("rRtoCharges", inr.format(rtoCharges));
+    setText("rCodMargin", inr.format(codMarginReceived));
+    setText("rPrepaidRevenue", inr.format(prepaidRevenue));
+    setText("rTotalCashReceived", inr.format(totalCashReceived));
+    setText("rSupplierPayment", inr.format(supplierPayment));
+    setText("rMetaSpendOut", inr.format(metaSpendIncl));
+    setText("rOtherExpensesOut", inr.format(otherExpenses));
+    setText("rTotalCashOutflow", inr.format(totalCashOutflow));
+
+    // GST ledger
+    setText("rOutputGST", inr2.format(outputGST));
+    setText("rInputGST", inr2.format(inputGST));
+    document.getElementById("rNetGSTLabel").textContent = netGST > 0 ? "Net GST payable" : "Net ITC carried forward";
+    setText("rNetGST", inr2.format(Math.abs(netGST)));
+    setClass("rNetGST", netGST > 0 ? "warn" : "pos");
+  }
+
+  ids.forEach(function(id){
+    el[id].addEventListener("input", recalc);
+  });
+
+  recalc();
+})();
+</script>
