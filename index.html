@@ -1,4 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>COD Pricing Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* layout: left column of input groups (order funnel, pricing, costs, ad spend) feeding a right-hand KPI strip + line-item ledger table; stacks to one column on phone */
 :root{
@@ -47,6 +54,7 @@
 }
 
 *{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
 body{
   background:var(--bg);
   color:var(--fg);
@@ -54,6 +62,8 @@ body{
   padding-inline:16px;
   padding-block:28px 48px;
   min-height:100%;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
 }
 h1,h2,h3{font-family:"Fraunces","Georgia",serif;font-weight:600;text-wrap:balance;margin:0;}
 .num{font-family:"IBM Plex Mono","SFMono-Regular",monospace;font-variant-numeric:tabular-nums;}
@@ -160,9 +170,8 @@ tr.subtotal{border-bottom:1px solid var(--border);}
 
 .foot{margin-top:26px;color:var(--fg-muted);font-size:0.78rem;text-align:center;}
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
+</head>
+<body>
 <div class="wrap">
   <header class="page">
     <div>
@@ -435,3 +444,5 @@ tr.subtotal{border-bottom:1px solid var(--border);}
   recalc();
 })();
 </script>
+</body>
+</html>
